@@ -18,6 +18,11 @@ Dynamoid.configure do |config|
   config.write_capacity = 1 # Write capacity for your tables
 end
 
+post= Post.new
+post.id= 1
+post.title= "sample title 1"
+post.publish_date = DateTime.now
+post.save
 
 # dynamodb = Aws::DynamoDB::Client.new
 #
