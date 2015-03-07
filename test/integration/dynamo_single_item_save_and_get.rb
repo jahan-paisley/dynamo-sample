@@ -1,6 +1,6 @@
 require 'test_helper'
 
-class DynamoTestTest < ActionDispatch::IntegrationTest
+class DynamoSingleItemSaveAndGet < ActionDispatch::IntegrationTest
   test "DynamoDbLocal is working fine" do
     post= Post.new
     post.id= 1
@@ -10,6 +10,8 @@ class DynamoTestTest < ActionDispatch::IntegrationTest
 
     post1= Post.find(1)
     # binding.pry
-    p post1.to_json
+
+
+    assert post1 == post
   end
 end
