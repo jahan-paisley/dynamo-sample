@@ -34,10 +34,10 @@ module Dynamoid
           range_key_hash = nil
         end
         options = {
-            attribute_definitions: self.attributes.slice(:id, :created_at).collect { |field, type| {attribute_name: field, attribute_type: dynamo_type(type[:type])} },
+            attribute_definitions: self.attributes.slice(:id).collect { |field, type| {attribute_name: field, attribute_type: dynamo_type(type[:type])} },
             key_schema: [
                 {attribute_name: self.hash_key, key_type: "HASH"},
-            ]+ self.attributes.slice(:created_at).collect { |field, type| {attribute_name: field, key_type: "RANGE"} }.to_a(),
+            ], #+ self.attributes.slice(:created_at).collect { |field, type| {attribute_name: field, key_type: "RANGE"} }.to_a(),
             table_name: self.table_name,
             provisioned_throughput:
                 {
@@ -126,6 +126,7 @@ module Dynamoid
       end
 
       def dynamo_type(type)
+        # binding.pry
         case type
           when :integer, :float, :datetime
             'N'
@@ -163,6 +164,7 @@ module Dynamoid
       self.class.create_table
 
       if new_record?
+        conditions= {}
         # conditions = {:unless_exists => [self.class.hash_key]}
         # conditions[:unless_exists] << range_key if (range_key)
 
@@ -275,7 +277,7 @@ module Dynamoid
         # Add an exists check to prevent overwriting existing records with new ones
         if (new_record?)
           conditions ||= {}
-          (conditions[:unless_exists] ||= []) << self.class.hash_key
+          # (conditions[:unless_exists] ||= []) << self.class.hash_key
         end
 
         # Add an optimistic locking check if the lock_version column exists

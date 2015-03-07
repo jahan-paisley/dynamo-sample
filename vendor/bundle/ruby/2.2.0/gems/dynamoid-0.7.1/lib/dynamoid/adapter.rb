@@ -70,6 +70,7 @@ module Dynamoid
     #
     # @since 0.2.0
     def read(table, ids, options = {})
+      # binding.pry
       range_key = options.delete(:range_key)
 
       if ids.respond_to?(:each)
@@ -82,6 +83,7 @@ module Dynamoid
         end
       else
         if Dynamoid::Config.partitioning?
+          # binding.pry
           ids = range_key ? [[ids, range_key]] : ids
           results = batch_get_item({table => id_with_partitions(ids)}, options)
           result_for_partition(results[table],table).first
@@ -184,23 +186,23 @@ module Dynamoid
     def result_for_partition(results, table_name)
       table = Dynamoid::Adapter::AwsSdk.get_table(table_name)
       
-      if table.range_key     
-        range_key_name = table.range_key.name.to_sym
-        
-        final_hash = {}
-
-        results.each do |record|
-          test_record = final_hash[record[range_key_name]]
-          
-          if test_record.nil? || ((record[range_key_name] == test_record[range_key_name]) && (record[:updated_at] > test_record[:updated_at]))
-            #get ride of our partition and put it in the array with the range key
-            record[:id], partition = get_original_id_and_partition  record[:id]
-            final_hash[record[range_key_name]] = record
-          end
-        end
-  
-        return final_hash.values
-      else
+      # if table.range_key
+      #   range_key_name = table.range_key.name.to_sym
+      #
+      #   final_hash = {}
+      #
+      #   results.each do |record|
+      #     test_record = final_hash[record[range_key_name]]
+      #
+      #     if test_record.nil? || ((record[range_key_name] == test_record[range_key_name]) && (record[:updated_at] > test_record[:updated_at]))
+      #       #get ride of our partition and put it in the array with the range key
+      #       record[:id], partition = get_original_id_and_partition  record[:id]
+      #       final_hash[record[range_key_name]] = record
+      #     end
+      #   end
+      #
+      #   return final_hash.values
+      # else
         {}.tap do |hash|
           Array(results).each do |result|
             next if result.nil?
@@ -213,7 +215,7 @@ module Dynamoid
             end
           end
         end.values
-      end
+      # end
     end
 
     # Delegate all methods that aren't defind here to the underlying adapter.

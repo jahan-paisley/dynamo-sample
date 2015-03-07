@@ -8,5 +8,8 @@ class DynamoTestTest < ActionDispatch::IntegrationTest
     post.publish_date = DateTime.now
     post.save
 
+    post1= Post.find(1)
+    # binding.pry
+    p post1.to_json
   end
 end

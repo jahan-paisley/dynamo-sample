@@ -63,11 +63,15 @@ module Dynamoid
       #
       # @since 0.2.0
       def batch_get_item(table_ids, options = {})
+        # binding.pry
         hash = Hash.new{|h, k| h[k] = []}
         return hash if table_ids.all?{|k, v| v.empty?}
         table_ids.each do |t, ids|
           Array(ids).in_groups_of(100, false) do |group|
-            batch = Aws::DynamoDB::BatchGet.new(:config => @@connection.config)
+            idMaps = ids.collect { |e| {id: e} }
+            options = {request_items: {"#{table_ids}" => {keys: idMaps}}}.merge(options)
+            batch = @@connection.batch_get_item(options)
+            # binding.pry
             batch.table(t, :all, Array(group), options) unless group.nil? || group.empty?
             batch.each do |table_name, attributes|
               hash[table_name] << attributes.symbolize_keys!
@@ -108,9 +112,10 @@ module Dynamoid
       #
       # @since 0.2.0
       def create_table(options)
-        Dynamoid.logger.info "Creating #{table_name} table. This could take a while."
+        Dynamoid.logger.info "Creating #{options[:table_name]} table. This could take a while."
         table = @@connection.create_table(options)
-        sleep 0.5 while table.status == :creating
+        # binding.pry
+        sleep 0.5 while table[:table_description][:table_status] != "ACTIVE"
         return table
       end
 
@@ -155,15 +160,12 @@ module Dynamoid
       # @since 0.2.0
       def get_item(table_name, key, options = {})
         range_key = options.delete(:range_key)
-        table = get_table(table_name)
+        # table = get_table(table_name)
+        # binding.pry
+        # result = @@connection.get_item(table_name, key, range_key).attributes.to_h(options)
 
-        result = table.items.at(key, range_key).attributes.to_h(options)
-
-        if result.empty?
-          nil
-        else
-          result.symbolize_keys!
-        end
+        result = @@connection.get_item(table_name: table_name, key: {id: key})
+        result ? result[:item].symbolize_keys! : nil
       end
 
       def update_item(table_name, key, options = {}, &block)
@@ -190,7 +192,7 @@ module Dynamoid
       #
       # @since 0.2.0
       def put_item(table_name, object, options = nil)
-        binding.pry
+        # binding.pry
         options= {table_name: table_name, item: object.delete_if{|k, v| v.nil? || (v.respond_to?(:empty?) && v.empty?)}}.merge(options)
         @@connection.put_item(options)
       rescue Aws::DynamoDB::Errors::ConditionalCheckFailedException => e
@@ -256,11 +258,10 @@ module Dynamoid
 
       def get_table(table_name)
         unless table_cache.include? table_name
-          binding.pry
-          table_cache= @@connection.list_tables()[:table_names]
+          @table_cache= @@connection.list_tables()[:table_names]
           # table.load_schema
         end
-        table
+        table_name
       end
 
       def table_cache

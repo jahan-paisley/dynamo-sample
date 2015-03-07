@@ -15,7 +15,7 @@ module Dynamoid #:nodoc:
       field :created_at, :datetime
       field :updated_at, :datetime
 
-      field :id #Default primary key
+      field :id, :integer #Default primary key
     end
 
     module ClassMethods
