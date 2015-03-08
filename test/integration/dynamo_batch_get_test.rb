@@ -10,6 +10,6 @@ class DynamoBatchGetTest < ActionDispatch::IntegrationTest
 
     posts= Post.find([1,2,3])
 
-    assert !posts.is_a? Enumerable
+    assert posts.is_a?(Enumerable)
   end
 end
