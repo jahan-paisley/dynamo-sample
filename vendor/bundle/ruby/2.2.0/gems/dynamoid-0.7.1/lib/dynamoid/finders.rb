@@ -16,7 +16,7 @@ module Dynamoid
       #
       # @since 0.2.0
       def find(*ids)
-
+        # binding.pry
         options = if ids.last.is_a? Hash
                     ids.slice!(-1)
                   else
@@ -45,6 +45,7 @@ module Dynamoid
       #   Tweet.find_all([['1', 'red'], ['1', 'green']], :consistent_read => true)
       def find_all(ids, options = {})
         items = Dynamoid::Adapter.read(self.table_name, ids, options)
+        # binding.pry
         items ? items[self.table_name].map{|i| from_database(i)} : []
       end
 

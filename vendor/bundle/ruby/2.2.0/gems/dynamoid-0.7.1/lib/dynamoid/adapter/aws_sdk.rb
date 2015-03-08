@@ -38,8 +38,7 @@ module Dynamoid
       # dynamo_db_endpoint : dynamodb.ap-southeast-1.amazonaws.com)
       # @since 0.2.0
       def connect!
-      @@connection = Aws::DynamoDB::Client.new
-
+        @@connection = Aws::DynamoDB::Client.new
       end
 
       # Return the established connection.
@@ -63,18 +62,16 @@ module Dynamoid
       #
       # @since 0.2.0
       def batch_get_item(table_ids, options = {})
-        # binding.pry
         hash = Hash.new{|h, k| h[k] = []}
-        return hash if table_ids.all?{|k, v| v.empty?}
+        return hash if table_ids.all?{|_, v| v.empty?}
         table_ids.each do |t, ids|
           Array(ids).in_groups_of(100, false) do |group|
-            idMaps = ids.collect { |e| {id: e} }
-            options = {request_items: {"#{table_ids}" => {keys: idMaps}}}.merge(options)
+            idMaps = group.collect { |e| {id: e} }
+            options = {request_items: {"#{t}" => {keys: idMaps}}}.merge(options)
             batch = @@connection.batch_get_item(options)
-            # binding.pry
-            batch.table(t, :all, Array(group), options) unless group.nil? || group.empty?
-            batch.each do |table_name, attributes|
-              hash[table_name] << attributes.symbolize_keys!
+            # batch.table(t, :all, Array(group), options) unless group.nil? || group.empty?
+            batch[:responses].each do |table_name, attributes|
+              hash[table_name] += attributes.map(&:symbolize_keys!)
             end
           end
         end
